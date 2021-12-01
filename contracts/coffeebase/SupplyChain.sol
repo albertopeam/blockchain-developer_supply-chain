@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.10;
 
-// Define a contract 'Supplychain'
-contract SupplyChain {
+import "../coffeecore/Ownable.sol";
+import "../coffeeaccesscontrol/FarmerRole.sol";
+import "../coffeeaccesscontrol/DistributorRole.sol";
+import "../coffeeaccesscontrol/RetailerRole.sol";
+import "../coffeeaccesscontrol/ConsumerRole.sol";
 
-  // Define 'owner'
-  address owner;
+// Define a contract 'Supplychain'
+contract SupplyChain is Ownable, FarmerRole, DistributorRole, RetailerRole, ConsumerRole {
 
   // Define a variable called 'upc' for Universal Product Code (UPC)
   uint  upc;
@@ -52,6 +55,7 @@ contract SupplyChain {
     address distributorID;  // Metamask-Ethereum address of the Distributor
     address retailerID; // Metamask-Ethereum address of the Retailer
     address consumerID; // Metamask-Ethereum address of the Consumer
+    bool exists; // used to check existence
   }
 
   // Define 8 events with the same 8 state values and accept 'upc' as input argument
@@ -63,12 +67,6 @@ contract SupplyChain {
   event Shipped(uint upc);
   event Received(uint upc);
   event Purchased(uint upc);
-
-  // Define a modifer that checks to see if msg.sender == owner of the contract
-  modifier onlyOwner() {
-    require(msg.sender == owner);
-    _;
-  }
 
   // Define a modifer that verifies the Caller
   modifier verifyCaller (address _address) {
@@ -138,31 +136,47 @@ contract SupplyChain {
     _;
   }
 
-  // In the constructor set 'owner' to the address that instantiated the contract
   // and set 'sku' to 1
   // and set 'upc' to 1
   constructor() payable {
-    owner = msg.sender;
     sku = 1;
     upc = 1;
   }
 
   // Define a function 'kill' if required
-  function kill() public {
-    if (msg.sender == owner) {
-      selfdestruct(payable(owner));
-    }
+  function kill() public onlyOwner {
+    selfdestruct(payable(owner()));
   }
 
   // Define a function 'harvestItem' that allows a farmer to mark an item 'Harvested'
   function harvestItem(uint _upc, address _originFarmerID, string memory _originFarmName, string memory _originFarmInformation, string  memory _originFarmLatitude, string memory _originFarmLongitude, string memory _productNotes) public 
+    onlyFarmer
   {
+    require(items[_upc].exists == false, "UPC already exists");
     // Add the new item as part of Harvest
-    
+    items[_upc] = Item({
+      sku: sku, 
+      upc: _upc, 
+      ownerID: _originFarmerID, 
+      originFarmerID: _originFarmerID, 
+      originFarmName: _originFarmName,
+      originFarmInformation: _originFarmInformation, 
+      originFarmLatitude: _originFarmLatitude,
+      originFarmLongitude: _originFarmLongitude,
+      productID: sku + _upc,
+      productNotes: _productNotes,
+      productPrice: 0,
+      itemState: defaultState,
+      distributorID: address(0),
+      retailerID: address(0),
+      consumerID: address(0),
+      exists: true
+      });
     // Increment sku
     sku = sku + 1;
     // Emit the appropriate event
-    
+    uint some = _upc;
+    emit Harvested(some);
   }
 
   // Define a function 'processtItem' that allows a farmer to mark an item 'Processed'
@@ -266,31 +280,38 @@ contract SupplyChain {
 
   // Define a function 'fetchItemBufferOne' that fetches the data
   function fetchItemBufferOne(uint _upc) public view returns 
-  (
-  uint    itemSKU,
-  uint    itemUPC,
-  address ownerID,
-  address originFarmerID,
-  string  memory originFarmName,
-  string  memory originFarmInformation,
-  string  memory originFarmLatitude,
-  string  memory originFarmLongitude
-  ) 
+    (
+    uint    itemSKU,
+    uint    itemUPC,
+    address ownerID,
+    address originFarmerID,
+    string  memory originFarmName,
+    string  memory originFarmInformation,
+    string  memory originFarmLatitude,
+    string  memory originFarmLongitude
+    ) 
   {
-  // Assign values to the 8 parameters
-  
-    
-  return 
-  (
-  itemSKU,
-  itemUPC,
-  ownerID,
-  originFarmerID,
-  originFarmName,
-  originFarmInformation,
-  originFarmLatitude,
-  originFarmLongitude
-  );
+    // Assign values to the 8 parameters
+    Item memory item = items[_upc];
+    itemSKU = item.sku;
+    itemUPC = item.upc;
+    ownerID = item.originFarmerID;
+    originFarmerID = item.originFarmerID;
+    originFarmName = item.originFarmName;
+    originFarmInformation = item.originFarmInformation;
+    originFarmLatitude = item.originFarmLatitude;
+    originFarmLongitude = item.originFarmLongitude;
+    return
+    (
+    itemSKU,
+    itemUPC,
+    ownerID,
+    originFarmerID,
+    originFarmName,
+    originFarmInformation,
+    originFarmLatitude,
+    originFarmLongitude
+    );
   }
 
   // Define a function 'fetchItemBufferTwo' that fetches the data
@@ -308,19 +329,43 @@ contract SupplyChain {
   ) 
   {
     // Assign values to the 9 parameters
-  
-    
-  return 
-  (
-  itemSKU,
-  itemUPC,
-  productID,
-  productNotes,
-  productPrice,
-  itemState,
-  distributorID,
-  retailerID,
-  consumerID
-  );
+    Item memory item = items[_upc];
+    itemSKU = item.sku;
+    itemUPC = item.upc;
+    productID = item.productID;
+    productNotes = item.productNotes;
+    productPrice = item.productPrice;
+    if (item.itemState == State.Harvested) {
+      itemState = 0;
+    } else if (item.itemState == State.Processed) {
+      itemState = 1;
+    } else if (item.itemState == State.Packed) {
+      itemState = 2;
+    } else if (item.itemState == State.ForSale) {
+      itemState = 3;
+    } else if (item.itemState == State.Sold) {
+      itemState = 4;
+    } else if (item.itemState == State.Shipped) {
+      itemState = 5;
+    } else if (item.itemState == State.Received) {
+      itemState = 6;
+    } else if (item.itemState == State.Purchased) {
+      itemState = 7;
+    }
+    distributorID = item.distributorID;
+    retailerID = item.retailerID;
+    consumerID = item.consumerID;
+    return 
+    (
+    itemSKU,
+    itemUPC,
+    productID,
+    productNotes,
+    productPrice,
+    itemState,
+    distributorID,
+    retailerID,
+    consumerID
+    );
   }
 }
