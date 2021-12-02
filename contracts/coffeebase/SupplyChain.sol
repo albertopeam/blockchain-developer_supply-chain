@@ -70,7 +70,7 @@ contract SupplyChain is Ownable, FarmerRole, DistributorRole, RetailerRole, Cons
 
   // Define a modifer that verifies the Caller
   modifier verifyCaller (address _address) {
-    require(msg.sender == _address); 
+    require(msg.sender == _address, "Caller can't do this action"); 
     _;
   }
 
@@ -90,7 +90,7 @@ contract SupplyChain is Ownable, FarmerRole, DistributorRole, RetailerRole, Cons
 
   // Define a modifier that checks if an item.state of a upc is Harvested
   modifier harvested(uint _upc) {
-    require(items[_upc].itemState == State.Harvested);
+    require(items[_upc].itemState == State.Harvested, "Not in harvested state");
     _;
   }
 
@@ -133,6 +133,12 @@ contract SupplyChain is Ownable, FarmerRole, DistributorRole, RetailerRole, Cons
   // Define a modifier that checks if an item.state of a upc is Purchased
   modifier purchased(uint _upc) {
     
+    _;
+  }
+
+    // Define a modifier that checks if an item for an upc exists
+  modifier exists(uint _upc) {
+    require(items[_upc].exists == true, "UPC doesn't exist");
     _;
   }
 
@@ -181,15 +187,13 @@ contract SupplyChain is Ownable, FarmerRole, DistributorRole, RetailerRole, Cons
 
   // Define a function 'processtItem' that allows a farmer to mark an item 'Processed'
   function processItem(uint _upc) public 
-  // Call modifier to check if upc has passed previous supply chain stage
-  
-  // Call modifier to verify caller of this function
-  
+    onlyFarmer  
+    exists(_upc)
+    verifyCaller(items[_upc].originFarmerID)
+    harvested(_upc)
   {
-    // Update the appropriate fields
-    
-    // Emit the appropriate event
-    
+    items[_upc].itemState = State.Processed;
+    emit Processed(_upc);
   }
 
   // Define a function 'packItem' that allows a farmer to mark an item 'Packed'
