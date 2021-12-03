@@ -174,30 +174,60 @@ contract('SupplyChain', function(accounts) {
 
     // 5th Test
     it("Testing smart contract function buyItem() that allows a distributor to buy coffee", async() => {
-        const supplyChain = await SupplyChain.deployed()
-        
-        // Declare and Initialize a variable for event
-        
-        
-        // Watch the emitted event Sold()
-        //TODO: uncomment next line
-        //var event = supplyChain.Sold()
-        
+        await sut.addDistributor(distributorID)        
+        const itemUPC = 13       
+        await sut.harvestItem(itemUPC, originFarmerID, originFarmName, originFarmInformation, originFarmLatitude, originFarmLongitude, productNotes, {from: originFarmerID})
+        await sut.processItem(itemUPC, {from: originFarmerID})
+        await sut.packItem(itemUPC, {from: originFarmerID})
+        await sut.sellItem(itemUPC, productPrice, {from: originFarmerID})
 
-        // Mark an item as Sold by calling function buyItem()
+        const originFarmerBalance = await web3.eth.getBalance(originFarmerID)
+        const distribuitorBalance = await web3.eth.getBalance(distributorID)
+        const txHash = await sut.buyItem(itemUPC, {from: distributorID, value: web3.utils.toWei("1", "ether")})
+        const originFarmerBalanceAfter = await web3.eth.getBalance(originFarmerID)
+        const distribuitorBalanceAfter = await web3.eth.getBalance(distributorID)
         
-
-        // Retrieve the just now saved item from blockchain by calling function fetchItem()
-        
-
-        // Verify the result set
-        
+        const item1 = await sut.fetchItemBufferOne(itemUPC)
+        assert.equal(item1.ownerID, distributorID)
+        const item2 = await sut.fetchItemBufferTwo(itemUPC)
+        assert.equal(item2.distributorID, distributorID)
+        assert.equal(item2.itemState, 4)
+        truffleAssert.eventEmitted(txHash, 'Sold', (ev) => { return ev.upc == itemUPC })
+        const gasUsed = txHash.receipt.gasUsed
+        const tx = await web3.eth.getTransaction(txHash.tx);
+        const gasPricePerUnit = tx.gasPrice;
+        const gasPrice = web3.utils.toBN(gasUsed).mul(web3.utils.toBN(gasPricePerUnit))
+        const productPriceBN = web3.utils.toBN(productPrice)
+        const expectedFarmerBalance = web3.utils.toBN(originFarmerBalance).add(productPriceBN).toString()
+        assert.equal(originFarmerBalanceAfter, expectedFarmerBalance)
+        const expectedDistribuitorBalance = web3.utils.toBN(distribuitorBalance).sub(gasPrice).sub(productPriceBN).toString()
+        assert.equal(distribuitorBalanceAfter, expectedDistribuitorBalance)
     })    
+
+    it("when buyItem is invoked by other role than distributor then revert", async() => {
+        await truffleAssert.reverts(sut.buyItem(upc, {from: originFarmerID}), "Only distributor can do this action");
+    })
+
+    it("when buyItem is invoked using an non existing UPC then revert", async() => {
+        await truffleAssert.reverts(sut.buyItem(100), "UPC doesn't exist");
+    })
+
+    it("when buyItem is invoked from a invalid previous state then revert", async() => {
+        await sut.harvestItem(14, originFarmerID, originFarmName, originFarmInformation, originFarmLatitude, originFarmLongitude, productNotes, {from: originFarmerID})
+        await truffleAssert.reverts(sut.buyItem(14, {from: distributorID}), "Not in for sale state")
+    })
+
+    it("when buyItem is invoked with less ether than price then revert", async() => {
+        const value = web3.utils.toWei("1", "wei")
+        await sut.harvestItem(15, originFarmerID, originFarmName, originFarmInformation, originFarmLatitude, originFarmLongitude, productNotes)
+        await sut.processItem(15, {from: originFarmerID})
+        await sut.packItem(15, {from: originFarmerID})
+        await sut.sellItem(15, productPrice, {from: originFarmerID});
+        await truffleAssert.reverts(sut.buyItem(15, {from: distributorID, value: value}), "Not enough ether to pay");
+    })
 
     // 6th Test
     it("Testing smart contract function shipItem() that allows a distributor to ship coffee", async() => {
-        const supplyChain = await SupplyChain.deployed()
-        
         // Declare and Initialize a variable for event
         
         

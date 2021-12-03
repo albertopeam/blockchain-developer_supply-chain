@@ -76,7 +76,7 @@ contract SupplyChain is Ownable, FarmerRole, DistributorRole, RetailerRole, Cons
 
   // Define a modifier that checks if the paid amount is sufficient to cover the price
   modifier paidEnough(uint _price) { 
-    require(msg.value >= _price); 
+    require(msg.value >= _price, "Not enough ether to pay"); 
     _;
   }
   
@@ -85,7 +85,7 @@ contract SupplyChain is Ownable, FarmerRole, DistributorRole, RetailerRole, Cons
     _;
     uint _price = items[_upc].productPrice;
     uint amountToReturn = msg.value - _price;
-    payable(items[_upc].consumerID).transfer(amountToReturn);
+    payable(msg.sender).transfer(amountToReturn);
   }
 
   // Define a modifier that checks if an item.state of a upc is Harvested
@@ -108,7 +108,7 @@ contract SupplyChain is Ownable, FarmerRole, DistributorRole, RetailerRole, Cons
 
   // Define a modifier that checks if an item.state of a upc is ForSale
   modifier forSale(uint _upc) {
-
+    require(items[_upc].itemState == State.ForSale, "Not in for sale state");
     _;
   }
 
@@ -219,24 +219,23 @@ contract SupplyChain is Ownable, FarmerRole, DistributorRole, RetailerRole, Cons
     emit ForSale(_upc);
   }
 
-  // Define a function 'buyItem' that allows the disributor to mark an item 'Sold'
+  // Define a function 'buyItem' that allows the distributor to mark an item 'Sold'
   // Use the above defined modifiers to check if the item is available for sale, if the buyer has paid enough, 
   // and any excess ether sent is refunded back to the buyer
   function buyItem(uint _upc) public payable 
-    // Call modifier to check if upc has passed previous supply chain stage
-    
-    // Call modifer to check if buyer has paid enough
-    
-    // Call modifer to send any excess ether back to buyer
-    
+    onlyDistributor
+    exists(_upc)
+    forSale(_upc)    
+    paidEnough(items[_upc].productPrice)
+    checkValue(_upc)
     {
-    
-    // Update the appropriate fields - ownerID, distributorID, itemState
-    
-    // Transfer money to farmer
-    
-    // emit the appropriate event
-    
+      address previousOwnerID = items[_upc].ownerID;
+      uint price = items[_upc].productPrice;
+      items[_upc].itemState = State.Sold;
+      items[_upc].ownerID = msg.sender;
+      items[_upc].distributorID = msg.sender;      
+      payable(previousOwnerID).transfer(price);
+      emit Sold(_upc);
   }
 
   // Define a function 'shipItem' that allows the distributor to mark an item 'Shipped'
@@ -296,7 +295,7 @@ contract SupplyChain is Ownable, FarmerRole, DistributorRole, RetailerRole, Cons
     Item memory item = items[_upc];
     itemSKU = item.sku;
     itemUPC = item.upc;
-    ownerID = item.originFarmerID;
+    ownerID = item.ownerID;
     originFarmerID = item.originFarmerID;
     originFarmName = item.originFarmName;
     originFarmInformation = item.originFarmInformation;
