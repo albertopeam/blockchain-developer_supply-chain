@@ -102,7 +102,7 @@ contract SupplyChain is Ownable, FarmerRole, DistributorRole, RetailerRole, Cons
   
   // Define a modifier that checks if an item.state of a upc is Packed
   modifier packed(uint _upc) {
-
+    require(items[_upc].itemState == State.Packed, "Not in packed state");
     _;
   }
 
@@ -209,15 +209,14 @@ contract SupplyChain is Ownable, FarmerRole, DistributorRole, RetailerRole, Cons
 
   // Define a function 'sellItem' that allows a farmer to mark an item 'ForSale'
   function sellItem(uint _upc, uint _price) public 
-  // Call modifier to check if upc has passed previous supply chain stage
-  
-  // Call modifier to verify caller of this function
-  
+    onlyFarmer
+    exists(_upc)
+    verifyCaller(items[_upc].originFarmerID)
+    packed(_upc)
   {
-    // Update the appropriate fields
-    
-    // Emit the appropriate event
-    
+    items[_upc].itemState = State.ForSale;
+    items[_upc].productPrice = _price;
+    emit ForSale(_upc);
   }
 
   // Define a function 'buyItem' that allows the disributor to mark an item 'Sold'

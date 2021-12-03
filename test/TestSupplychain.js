@@ -142,23 +142,35 @@ contract('SupplyChain', function(accounts) {
 
     // 4th Test
     it("Testing smart contract function sellItem() that allows a farmer to sell coffee", async() => {
-        const supplyChain = await SupplyChain.deployed()
-        
-        // Declare and Initialize a variable for event
-        
-        
-        // Watch the emitted event ForSale()
-        
-
-        // Mark an item as ForSale by calling function sellItem()
-        
-
-        // Retrieve the just now saved item from blockchain by calling function fetchItem()
-        
-
-        // Verify the result set
-          
+        await sut.harvestItem(10, originFarmerID, originFarmName, originFarmInformation, originFarmLatitude, originFarmLongitude, productNotes, {from: originFarmerID})
+        await sut.processItem(10, {from: originFarmerID})
+        await sut.packItem(10, {from: originFarmerID})
+        const txHash = await sut.sellItem(10, productPrice, {from: originFarmerID})
+        const item = await sut.fetchItemBufferTwo(10)
+        assert.equal(item.itemState, 3)
+        assert.equal(item.productPrice, productPrice)
+        truffleAssert.eventEmitted(txHash, 'ForSale', (ev) => { return ev.upc == 10 })    
     })    
+
+    it("when sellItem is invoked by other role than farmer then revert", async() => {
+        await truffleAssert.reverts(sut.sellItem(upc, productPrice, {from: distributorID}), "Only farmers can do this action");
+    })
+
+    it("when sellItem is invoked using an non existing UPC then revert", async() => {
+        await truffleAssert.reverts(sut.sellItem(100, productPrice), "UPC doesn't exist");
+    })
+
+    it("when sellItem is invoked from a invalid previous state then revert", async() => {
+        await sut.harvestItem(11, originFarmerID, originFarmName, originFarmInformation, originFarmLatitude, originFarmLongitude, productNotes, {from: originFarmerID})
+        await truffleAssert.reverts(sut.sellItem(11, productPrice, {from: originFarmerID}), "Not in packed state")
+    })
+
+    it("when sellItem is invoked from a different farmer than harvested it then revert", async() => {
+        await sut.harvestItem(12, originFarmerID, originFarmName, originFarmInformation, originFarmLatitude, originFarmLongitude, productNotes)
+        await sut.processItem(12, {from: originFarmerID})
+        await sut.packItem(12, {from: originFarmerID})
+        await truffleAssert.reverts(sut.sellItem(12, productPrice, {from: secondFarmerID}), "Caller can't do this action");
+    })
 
     // 5th Test
     it("Testing smart contract function buyItem() that allows a distributor to buy coffee", async() => {
