@@ -23,6 +23,7 @@ contract('SupplyChain', function(accounts) {
     const consumerID = accounts[4]
     const emptyAddress = '0x00000000000000000000000000000000000000'
     const secondFarmerID = accounts[5]
+    const secondDistribuitorID = accounts[6]
 
     console.log("Accounts")
     console.log("Contract Owner: accounts[0] ", accounts[0])
@@ -175,7 +176,7 @@ contract('SupplyChain', function(accounts) {
     // 5th Test
     it("Testing smart contract function buyItem() that allows a distributor to buy coffee", async() => {
         await sut.addDistributor(distributorID)        
-        const itemUPC = 13       
+        const itemUPC = 13   
         await sut.harvestItem(itemUPC, originFarmerID, originFarmName, originFarmInformation, originFarmLatitude, originFarmLongitude, productNotes, {from: originFarmerID})
         await sut.processItem(itemUPC, {from: originFarmerID})
         await sut.packItem(itemUPC, {from: originFarmerID})
@@ -228,21 +229,40 @@ contract('SupplyChain', function(accounts) {
 
     // 6th Test
     it("Testing smart contract function shipItem() that allows a distributor to ship coffee", async() => {
-        // Declare and Initialize a variable for event
-        
-        
-        // Watch the emitted event Shipped()
-        
+        const itemUPC = 16
+        await sut.harvestItem(itemUPC, originFarmerID, originFarmName, originFarmInformation, originFarmLatitude, originFarmLongitude, productNotes)
+        await sut.processItem(itemUPC, {from: originFarmerID})
+        await sut.packItem(itemUPC, {from: originFarmerID})
+        await sut.sellItem(itemUPC, productPrice, {from: originFarmerID})
+        await sut.buyItem(itemUPC, {from: distributorID, value: web3.utils.toWei("1", "ether")})
+        const txHash = await sut.shipItem(itemUPC, {from: distributorID})
+        truffleAssert.eventEmitted(txHash, 'Shipped', (ev) => { return ev.upc == itemUPC })
+        const item = await sut.fetchItemBufferTwo(itemUPC)
+        assert.equal(item.itemState, 5)
+    })  
+    
+    it("when shipItem is invoked by other role than distributor then revert", async() => {
+        await truffleAssert.reverts(sut.shipItem(upc, {from: originFarmerID}), "Only distributor can do this action");
+    })
 
-        // Mark an item as Sold by calling function buyItem()
-        
+    it("when shipItem is invoked using an non existing UPC then revert", async() => {
+        await truffleAssert.reverts(sut.shipItem(100), "UPC doesn't exist");
+    })
 
-        // Retrieve the just now saved item from blockchain by calling function fetchItem()
-        
+    it("when shipItem is invoked from a different distribuitor than bought it then revert", async() => {
+        await sut.addDistributor(secondDistribuitorID)
+        await sut.harvestItem(17, originFarmerID, originFarmName, originFarmInformation, originFarmLatitude, originFarmLongitude, productNotes)
+        await sut.processItem(17, {from: originFarmerID})
+        await sut.packItem(17, {from: originFarmerID})
+        await sut.sellItem(17, productPrice, {from: originFarmerID})
+        await sut.buyItem(17, {from: distributorID, value: web3.utils.toWei("1", "ether")})
+        await truffleAssert.reverts(sut.shipItem(17, {from: secondDistribuitorID}), "Caller can't do this action");
+    })
 
-        // Verify the result set
-              
-    })    
+    it("when shipItem is invoked from a invalid previous state then revert", async() => {
+        await sut.harvestItem(18, originFarmerID, originFarmName, originFarmInformation, originFarmLatitude, originFarmLongitude, productNotes, {from: originFarmerID})
+        await truffleAssert.reverts(sut.shipItem(18, {from: distributorID}), "Not in sold state")
+    })
 
     // 7th Test
     it("Testing smart contract function receiveItem() that allows a retailer to mark coffee received", async() => {

@@ -114,7 +114,7 @@ contract SupplyChain is Ownable, FarmerRole, DistributorRole, RetailerRole, Cons
 
   // Define a modifier that checks if an item.state of a upc is Sold
   modifier sold(uint _upc) {
-
+    require(items[_upc].itemState == State.Sold, "Not in sold state");
     _;
   }
   
@@ -241,15 +241,13 @@ contract SupplyChain is Ownable, FarmerRole, DistributorRole, RetailerRole, Cons
   // Define a function 'shipItem' that allows the distributor to mark an item 'Shipped'
   // Use the above modifers to check if the item is sold
   function shipItem(uint _upc) public 
-    // Call modifier to check if upc has passed previous supply chain stage
-    
-    // Call modifier to verify caller of this function
-    
+    onlyDistributor
+    exists(_upc)
+    sold(_upc)
+    verifyCaller(items[_upc].distributorID)
     {
-    // Update the appropriate fields
-    
-    // Emit the appropriate event
-    
+      items[_upc].itemState = State.Shipped;
+      emit Shipped(_upc);
   }
 
   // Define a function 'receiveItem' that allows the retailer to mark an item 'Received'
