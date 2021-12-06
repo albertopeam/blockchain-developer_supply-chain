@@ -1,10 +1,12 @@
 # Documentation
 
 The contract address
+    Transaction ID
+    Contract address
+?NOT DEPLOYED UNTIL TEST IT WITH THE FRONTEND
 
 If libraries were used, include why these libraries were adopted.
 truffle-assertions -> to test events emitted by contracts
-
 
 If IPFS is used, include how IPFS is used in this project.
 

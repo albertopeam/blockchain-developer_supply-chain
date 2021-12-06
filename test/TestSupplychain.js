@@ -311,7 +311,6 @@ contract('SupplyChain', function(accounts) {
         const item2 = await sut.fetchItemBufferTwo(itemUPC)
         assert.equal(item2.itemState, 7)         
         assert.equal(item2.consumerID, consumerID)  
-        
     })   
     
     it("when purchaseItem is invoked by other role than consumer then revert", async() => {
