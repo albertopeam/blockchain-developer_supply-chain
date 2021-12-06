@@ -120,7 +120,7 @@ contract SupplyChain is Ownable, FarmerRole, DistributorRole, RetailerRole, Cons
   
   // Define a modifier that checks if an item.state of a upc is Shipped
   modifier shipped(uint _upc) {
-
+    require(items[_upc].itemState == State.Shipped, "Not in shipped state");
     _;
   }
 
@@ -253,14 +253,17 @@ contract SupplyChain is Ownable, FarmerRole, DistributorRole, RetailerRole, Cons
   // Define a function 'receiveItem' that allows the retailer to mark an item 'Received'
   // Use the above modifiers to check if the item is shipped
   function receiveItem(uint _upc) public 
-    // Call modifier to check if upc has passed previous supply chain stage
-    
-    // Access Control List enforced by calling Smart Contract / DApp
+    onlyRetailer
+    exists(_upc)
+    shipped(_upc)
     {
     // Update the appropriate fields - ownerID, retailerID, itemState
     
     // Emit the appropriate event
-    
+    items[_upc].itemState = State.Received;
+    items[_upc].ownerID = msg.sender;
+    items[_upc].retailerID = msg.sender;
+    emit Received(_upc);
   }
 
   // Define a function 'purchaseItem' that allows the consumer to mark an item 'Purchased'
