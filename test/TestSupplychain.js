@@ -47,14 +47,9 @@ contract('SupplyChain', function(accounts) {
 
     // 1st Test
     it("Testing smart contract function harvestItem() that allows a farmer to harvest coffee", async() => {    
-        // Mark an item as Harvested by calling function harvestItem()
         const txHash = await sut.harvestItem(upc, originFarmerID, originFarmName, originFarmInformation, originFarmLatitude, originFarmLongitude, productNotes)
-
-        // Retrieve the just now saved item from blockchain by calling function fetchItem()
         const resultBufferOne = await sut.fetchItemBufferOne.call(upc)
         const resultBufferTwo = await sut.fetchItemBufferTwo.call(upc)
-
-        // Verify the result set
         assert.equal(resultBufferOne[0], sku, 'Error: Invalid item SKU')
         assert.equal(resultBufferOne[1], upc, 'Error: Invalid item UPC')
         assert.equal(resultBufferOne[2], originFarmerID, 'Error: Missing or Invalid ownerID')
@@ -306,25 +301,30 @@ contract('SupplyChain', function(accounts) {
 
     // 9th Test
     it("Testing smart contract function fetchItemBufferOne() that allows anyone to fetch item details from blockchain", async() => {
-        const supplyChain = await SupplyChain.deployed()
-
-        // Retrieve the just now saved item from blockchain by calling function fetchItem()
-        
-        
-        // Verify the result set:
-        
+        const result = await sut.fetchItemBufferOne.call(upc)
+        assert.equal(result.itemSKU, sku)
+        assert.equal(result.itemUPC, upc)
+        assert.equal(result.ownerID, originFarmerID)
+        assert.equal(result.originFarmerID, originFarmerID)
+        assert.equal(result.originFarmName, originFarmName)
+        assert.equal(result.originFarmInformation, originFarmInformation)
+        assert.equal(result.originFarmLatitude, originFarmLatitude)
+        assert.equal(result.originFarmLongitude, originFarmLongitude)
     })
 
     // 10th Test
     it("Testing smart contract function fetchItemBufferTwo() that allows anyone to fetch item details from blockchain", async() => {
-        const supplyChain = await SupplyChain.deployed()
-
-        // Retrieve the just now saved item from blockchain by calling function fetchItem()
+        const result = await sut.fetchItemBufferTwo.call(upc)
         
-        
-        // Verify the result set:
-        
+        assert.equal(result.itemSKU, sku)
+        assert.equal(result.itemUPC, upc)
+        assert.equal(result.productID, productID)
+        assert.equal(result.productNotes, productNotes)
+        assert.equal(result.productPrice, 0)
+        assert.equal(result.itemState, 0)
+        assert.equal(result.distributorID, 0)
+        assert.equal(result.retailerID, 0)
+        assert.equal(result.consumerID, 0)
     })
-
 });
 
