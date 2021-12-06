@@ -294,22 +294,38 @@ contract('SupplyChain', function(accounts) {
 
     // 8th Test
     it("Testing smart contract function purchaseItem() that allows a consumer to purchase coffee", async() => {
-        
-        // Declare and Initialize a variable for event
-        
-        
-        // Watch the emitted event Purchased()
-        
+        await sut.addConsumer(consumerID)
+        const itemUPC = 21
+        await sut.harvestItem(itemUPC, originFarmerID, originFarmName, originFarmInformation, originFarmLatitude, originFarmLongitude, productNotes)
+        await sut.processItem(itemUPC, {from: originFarmerID})
+        await sut.packItem(itemUPC, {from: originFarmerID})
+        await sut.sellItem(itemUPC, productPrice, {from: originFarmerID})
+        await sut.buyItem(itemUPC, {from: distributorID, value: web3.utils.toWei("1", "ether")})
+        await sut.shipItem(itemUPC, {from: distributorID})
+        await sut.receiveItem(itemUPC, {from: retailerID})
+        const txHash = await sut.purchaseItem(itemUPC, {from: consumerID})
 
-        // Mark an item as Sold by calling function buyItem()
+        truffleAssert.eventEmitted(txHash, 'Purchased', (ev) => { return ev.upc == itemUPC })
+        const item1 = await sut.fetchItemBufferOne(itemUPC)
+        assert.equal(item1.ownerID, consumerID) 
+        const item2 = await sut.fetchItemBufferTwo(itemUPC)
+        assert.equal(item2.itemState, 7)         
+        assert.equal(item2.consumerID, consumerID)  
         
+    })   
+    
+    it("when purchaseItem is invoked by other role than consumer then revert", async() => {
+        await truffleAssert.reverts(sut.purchaseItem(upc, {from: originFarmerID}), "Only consumers can do this action");
+    })
 
-        // Retrieve the just now saved item from blockchain by calling function fetchItem()
-        
+    it("when purchaseItem is invoked using an non existing UPC then revert", async() => {
+        await truffleAssert.reverts(sut.purchaseItem(100), "UPC doesn't exist");
+    })
 
-        // Verify the result set
-        
-    })    
+    it("when receiveItem is invoked from a invalid previous state then revert", async() => {
+        await sut.harvestItem(22, originFarmerID, originFarmName, originFarmInformation, originFarmLatitude, originFarmLongitude, productNotes, {from: originFarmerID})
+        await truffleAssert.reverts(sut.purchaseItem(22, {from: consumerID}), "Not in received state")
+    })
 
     // 9th Test
     it("Testing smart contract function fetchItemBufferOne() that allows anyone to fetch item details from blockchain", async() => {

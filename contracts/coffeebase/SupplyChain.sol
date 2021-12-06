@@ -126,13 +126,13 @@ contract SupplyChain is Ownable, FarmerRole, DistributorRole, RetailerRole, Cons
 
   // Define a modifier that checks if an item.state of a upc is Received
   modifier received(uint _upc) {
-
+    require(items[_upc].itemState == State.Received, "Not in received state");
     _;
   }
 
   // Define a modifier that checks if an item.state of a upc is Purchased
   modifier purchased(uint _upc) {
-    
+    require(items[_upc].itemState == State.Purchased, "Not in purchased state");
     _;
   }
 
@@ -257,9 +257,6 @@ contract SupplyChain is Ownable, FarmerRole, DistributorRole, RetailerRole, Cons
     exists(_upc)
     shipped(_upc)
     {
-    // Update the appropriate fields - ownerID, retailerID, itemState
-    
-    // Emit the appropriate event
     items[_upc].itemState = State.Received;
     items[_upc].ownerID = msg.sender;
     items[_upc].retailerID = msg.sender;
@@ -269,14 +266,14 @@ contract SupplyChain is Ownable, FarmerRole, DistributorRole, RetailerRole, Cons
   // Define a function 'purchaseItem' that allows the consumer to mark an item 'Purchased'
   // Use the above modifiers to check if the item is received
   function purchaseItem(uint _upc) public 
-    // Call modifier to check if upc has passed previous supply chain stage
-    
-    // Access Control List enforced by calling Smart Contract / DApp
+    onlyConsumer
+    exists(_upc)
+    received(_upc)
     {
-    // Update the appropriate fields - ownerID, consumerID, itemState
-    
-    // Emit the appropriate event
-    
+    items[_upc].itemState = State.Purchased;
+    items[_upc].ownerID = msg.sender;
+    items[_upc].consumerID = msg.sender;
+    emit Purchased(_upc);
   }
 
   // Define a function 'fetchItemBufferOne' that fetches the data
