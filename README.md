@@ -7,6 +7,8 @@ The contract address
 
 If libraries were used, include why these libraries were adopted.
 truffle-assertions -> to test events emitted by contracts
+web3 -> to be able to access web3 API correctly
+truffleContract -> broken custom truffle contract
 
 If IPFS is used, include how IPFS is used in this project.
 
