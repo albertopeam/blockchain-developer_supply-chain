@@ -54,8 +54,11 @@ Distribute info:
 
 ## Diagrams
 
-UML dir?
 Activity
+
 Sequence
+
 State
-Class (Data Model)
+
+Class
+![Class diagram](uml/classDiagram.jpg)
