@@ -2,11 +2,12 @@
 
 ## Contracts
 
+SupplyChain contract deployed on [etherscan](https://rinkeby.etherscan.io/address/0x0994a97788630FB70ed46a1a43afBAA060F4473e)
+
 SupplyChain contract
 
     Transaction ID      0xa67fbeafc7dbd66c675de3f922e91b460427c2b047d9473303a0ddfb9d817494  
     Contract address    0x0994a97788630FB70ed46a1a43afBAA060F4473e
-    Contract URL        [etherscan](https://rinkeby.etherscan.io/address/0x0994a97788630FB70ed46a1a43afBAA060F4473e)
 
 FarmerRole contract
 
@@ -28,15 +29,21 @@ ConsumerRole contract
     Transaction ID      0x9c30fe99a174948cb1334a8ac97f742f6e917b41ed029c168ba363d82b873e38
     Contract address    0xB5ee4d0e2b23514cb067174f6E79B67Fb71ea820
 
+## Website
+
+[Website](https://ipfs.io/ipfs/QmZjgiJhD2BAHXSyoMsDybKJ2bwLHsJZ7iJYAAK1dDGvDG/) deployed on IPFS
+
+Distribute info:
+
+    1. Copy app/src dir & build/contracts/SupplyChain.json into a directory, ie: `distribution` dir
+    2. Upload the directory to your ipfs provider
+
 ## Specs
 
-If libraries were used, include why these libraries were adopted.
-
-* truffle-assertions -> to test events emitted by contracts
-* web3 -> to be able to access web3 API correctly
-* truffleContract -> broken custom truffle contract
-
-If IPFS is used, include how IPFS is used in this project.
+* truffle-assertions: used to test events emitted by contracts
+* web3: used in the frontend to be able to interact with ethereum network
+* truffleContract: used in the frontend to be able to load the contract interface(from its JSON representation) to interact with the deployed backend. I had some issues with embedded truffleContract
+* pinata cloud(IPFS): used to host the frontend to help reviewer using the dapp. hosted on [pinata cloud](https://www.pinata.cloud/)
 
 ## Program version numbers
 
