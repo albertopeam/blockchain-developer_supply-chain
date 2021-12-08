@@ -2,7 +2,7 @@
 
 ## Contracts
 
-SupplyChain contract deployed on [etherscan](https://rinkeby.etherscan.io/address/0x0994a97788630FB70ed46a1a43afBAA060F4473e)
+SupplyChain contract deployed on rinkeby, details on [etherscan](https://rinkeby.etherscan.io/address/0x0994a97788630FB70ed46a1a43afBAA060F4473e)
 
 SupplyChain contract
 
@@ -48,7 +48,7 @@ Distribute info:
 ## Program version numbers
 
 * Truffle v5.4.17 (core: 5.4.17)
-* Solidity v0.5.16 (solc-js)
+* Solidity ^0.8.10 (solc-js)
 * Node v12.22.6
 * Web3.js v1.5.3
 
