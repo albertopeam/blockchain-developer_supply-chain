@@ -55,13 +55,17 @@ Distribute info:
 ## Diagrams
 
 Activity
+
 ![Activity diagram](uml/activityDiagram.jpg)
 
 Sequence
+
 ![Sequence diagram](uml/sequenceDiagram.jpg)
 
 State
+
 ![State diagram](uml/stateDiagram.jpg)
 
 Class
+
 ![Class diagram](uml/classDiagram.jpg)
