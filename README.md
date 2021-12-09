@@ -52,6 +52,48 @@ Distribute info:
 * Node v12.22.6
 * Web3.js v1.5.3
 
+## Backend development/testing
+
+Setup the environment:
+
+ 1. having installed truffle(if not `npm install -g truffle` to install it globally, if only needed locally then skip this step)
+ 2. having installed ganache to have a local blockchain(if not download from [link](https://trufflesuite.com/ganache/) or install it via command line)
+ 3. `cd` into the project folder
+ 4. `npm install` to resolve package dependencies(if not installed truffle globally then `npm install truffle`)
+ 5. open project dir in your favourite editor
+ 6. start ganache and check the port number where it is running, open `truffle.js` and verify that it matches with the development network port, if not update it
+ 7. if the backend is going to be deployed on a network is mandatory to have an infura api key and the wallet mnemonic(if not needed skip this step). Both can we stored locally on your computer as environment variables. Edit the `truffle.js` file, lines 2 & 3 to support your env variables or your preferred method.
+ 8. From the command line
+    * compile: `truffle compile` or `truffle develop` & `compile`
+    * run the tests: `truffle test` or `test`(if used in the 1st step `truffle develop`)
+    * deploy: `truffle deploy --network [network name]` or `deploy --network [network name]`(if used in the 1st step `truffle develop`)
+
+## Frontend development
+
+Setup the environment:
+
+1. Having metamask extension installed and selected the appropiate network(`localhost:port` -> match ganache one)
+2. Enter `app` directory
+3. `npm install` to resolve lite-server dependency
+4. start local server using `npm run dev`, it will serve the `index.html`
+
+Operate the website
+
+1. You can see the website with placeholders
+2. If you are the deployer of the contract you will have all the needed roles for this step and next ones. 
+3. Locate harvest button and edit the data in the form as needed. Tap `harvest`, this will open a metamask with a transaction. Sign it and wait until confirmation. At the bottom of the frontend you will see the details of the transaction once its done.
+4. Locate `process` button and tap it, we are telling the system to change the state of the product as processed. The farmer is the only capable of doing that.
+5. Locate `pack` button and tap it, we are telling the system to change the state of the product as packed. The farmer is the only capable of doing that.
+6. Locate `sell` button and tap it, we are telling the system to change the state of the product as forSale. The farmer is the only capable of doing that.
+7. Locate `buy` button and tap it, we are telling the system to change the state of the product as sold. The distributor is the only capable of doing that.
+8. Locate `ship` button and tap it, we are telling the system to change the state of the product as shipped. The distributor is the only capable of doing that.
+9. Locate `receive` button and tap it, we are telling the system to change the state of the product as received. The retailer is the only capable of doing that.
+10. Locate `purchase` button and tap it, we are telling the system to change the state of the product as purchased. The consumer is the only capable of doing that.
+
+Note that all these previous steps are coordinated as a supply chain and in each stage is required that the appropiate role/user interacts to move the product on the chain.
+
+To verify the identity and origin of the product is possible using the `fetch` buttons at the top of the frontend.
+
 ## Diagrams
 
 Activity
